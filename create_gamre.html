@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Politicraft – Ambassador's Room</title>
+    <link rel="stylesheet" href="style.css"> 
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="page-header">
+            <h1>Ambassador's Room</h1>
+            <div class="tagline">Establish Your Nation's Foundation</div>
+        </header>
+
+        <section class="form-section">
+            <p class="intro-text">Welcome, Ambassador. To begin your journey and lay the groundwork for a new nation, please provide the essential details. This ensures your place in the global Politicraft world.</p>
+            
+            <form id="ambassador-form" action="game_dashboard.html" method="get">
+                <div class="form-group">
+                    <label for="user-name">Your Full Name:</label>
+                    <input type="text" id="user-name" name="userName" required placeholder="e.g., John Smith">
+                </div>
+                <div class="form-group">
+                    <label for="user-email">Your Email Address:</label>
+                    <input type="email" id="user-email" name="userEmail" required placeholder="e.g., your.name@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="user-os">Your Operating System:</label>
+                    <select id="user-os" name="userOS" required>
+                        <option value="">-- Select Your OS --</option>
+                        <option value="windows">Windows</option>
+                        <option value="macos">macOS</option>
+                        <option value="linux">Linux (e.g., Ubuntu, Fedora)</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <small class="help-text">This helps ensure fair matchmaking and game integrity across different setups.</small>
+                </div>
+                
+                <hr style="border-color: var(--text-dim); opacity: 0.1; margin: 2rem 0;">
+
+                <h2 class="sub-heading">Your Nation's Identity</h2>
+                <div class="form-group">
+                    <label for="gov-name">Your Nation's Name:</label>
+                    <input type="text" id="gov-name" name="govName" placeholder="e.g., The Digital Republic" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="gov-system">Government System (Political Structure):</label>
+                    <select id="gov-system" name="govSystem" required>
+                        <option value="">-- Select --</option>
+                        <option value="authoritarian">Authoritarian</option>
+                        <option value="direct-democracy">Direct Democracy</option>
+                        <option value="republic">Republic (Representative Democracy)</option>
+                        <option value="custom">Design My Own (Coming Soon)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="eco-policy">Economic Policy Stance:</label>
+                    <select id="eco-policy" name="ecoPolicy" required>
+                        <option value="">-- Select --</option>
+                        <option value="free-market">Free Market</option>
+                        <option value="planned">Planned Economy</option>
+                        <option value="mixed">Mixed Economy</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="social-priority">Core Social Priority:</label>
+                    <select id="social-priority" name="socialPriority" required>
+                        <option value="">-- Select --</option>
+                        <option value="public-welfare">Public Welfare</option>
+                        <option value="security-order">Security & Order</option>
+                        <option value="individual-liberty">Individual Liberty</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="resource-quadrant">Starting Resource Profile (Quadrant):</label>
+                    <select id="resource-quadrant" name="resourceQuadrant" required>
+                        <option value="">-- Select your Quadrant --</option>
+                        <option value="grasslands">Grasslands (Agriculture & Livestock)</option>
+                        <option value="forests">Forests (Wood & Wildlife)</option>
+                        <option value="desert">Desert (Energy Minerals & Rare Gems)</option>
+                        <option value="polar">Polar (Natural Gas & Crude Oil)</option>
+                        <option value="coastal-trade">Coastal (Trade & Fisheries)</option>
+                        <option value="mountainous">Mountainous (Industrial Minerals & Defense)</option>
+                        <option value="island-paradise">Island Paradise (Tourism & Fisheries)</option>
+                        <option value="volcanic-rich">Volcanic (Fertile Soil, Geothermal & Nuclear Materials)</option>
+                    </select>
+                    <small class="help-text">This defines your natural resource abundance and initial challenges.</small>
+                </div>
+
+                <button type="submit" class="cta">Found Your Nation</button>
+            </form>
+        </section>
+    </div>
+</body>
+</html>

@@ -1,0 +1,436 @@
+// =============================
+// Politicraft Infrastructure Pack (Phase 1: Engine & Plumbing)
+// =============================
+// NOTE: This bundle is ONLY core infrastructure: time, state, storage, events, chaos engine shell, UI wiring.
+//       Policy/rule evaluators (CBHS, treaties, nukes, etc.) will live in a separate layer you can plug in later.
+//       Each section below is a separate file. Drop them into /src/... and import via ES modules.
+
+/*
+Folder suggestion:
+/src
+  /core          -> engine plumbing (state, clock, event bus, storage)
+  /sim           -> metrics, day tick, chaos engine, profiles
+  /ui            -> DOM refs, page initializers, utility
+  /data          -> static JSON (profiles, config)
+  main.js        -> entry point included by every page (via type="module")
+*/
+
+// -------------------------------------------------------------
+// FILE: src/core/state.js
+// Centralized mutable game state object + helpers
+// -------------------------------------------------------------
+export const GameState = {
+  government: null,          // currentGovernment object
+  metrics: null,             // societalMetrics object
+  day: 1,
+  log: [],
+  activeDilemma: null,
+  dilemmaIgnoredCounter: 0,
+  gameEnded: false,
+  createdAtUTC: null,        // ISO string
+};
+
+export function initState(govObj, metricsObj) {
+  GameState.government = govObj;
+  GameState.metrics = metricsObj;
+  GameState.day = 1;
+  GameState.log = [];
+  GameState.activeDilemma = null;
+  GameState.dilemmaIgnoredCounter = 0;
+  GameState.gameEnded = false;
+  GameState.createdAtUTC = new Date().toISOString();
+}
+
+export function addLog(msg) {
+  GameState.log.unshift(`Day ${GameState.day}: ${msg}`);
+  if (GameState.log.length > 500) GameState.log.pop();
+}
+
+// -------------------------------------------------------------
+// FILE: src/core/storage.js
+// sessionStorage/localStorage persistence wrappers
+// -------------------------------------------------------------
+const KEY = 'politicraftGameState';
+
+export function saveState() {
+  sessionStorage.setItem(KEY, JSON.stringify(GameState));
+}
+
+export function loadState() {
+  const raw = sessionStorage.getItem(KEY);
+  if (!raw) return false;
+  try {
+    const obj = JSON.parse(raw);
+    Object.assign(GameState, obj);
+    return true;
+  } catch (e) {
+    console.warn('Bad state in storage, wiping.', e);
+    sessionStorage.removeItem(KEY);
+    return false;
+  }
+}
+
+export function clearState() {
+  sessionStorage.removeItem(KEY);
+}
+
+// -------------------------------------------------------------
+// FILE: src/core/eventBus.js
+// Tiny pub/sub for decoupled modules
+// -------------------------------------------------------------
+const listeners = new Map(); // event -> Set(callback)
+
+export function on(event, cb) {
+  if (!listeners.has(event)) listeners.set(event, new Set());
+  listeners.get(event).add(cb);
+  return () => listeners.get(event)?.delete(cb);
+}
+
+export function emit(event, payload) {
+  listeners.get(event)?.forEach(cb => cb(payload));
+}
+
+// Common events:
+// 'DAY_TICKED', 'METRICS_UPDATED', 'END_STATE', 'NEW_LOG', 'UI_READY'
+
+// -------------------------------------------------------------
+// FILE: src/core/clock.js
+// Real-world aligned day calculation (monotonic)
+// -------------------------------------------------------------
+import { GameState } from './state.js';
+
+export function daysSinceStartUTC() {
+  const todayUtc = new Date();
+  todayUtc.setUTCHours(0,0,0,0);
+  const start = new Date(GameState.createdAtUTC);
+  start.setUTCHours(0,0,0,0);
+  return Math.max(0, Math.floor((todayUtc - start) / 86400000));
+}
+
+// -------------------------------------------------------------
+// FILE: src/sim/metrics.js
+// Metric container + helpers (clamp etc.)
+// -------------------------------------------------------------
+export const defaultMetrics = () => ({
+  happiness: 50,
+  economy: 50,
+  order: 50,
+  freedom: 50,
+  treasury: 500
+});
+
+export function clampMetrics(m) {
+  for (const k of ['happiness','economy','order','freedom']) {
+    m[k] = Math.max(0, Math.min(100, m[k]));
+  }
+  // treasury can go negative; no clamp unless you choose to
+}
+
+// -------------------------------------------------------------
+// FILE: src/sim/resourceProfiles.js
+// (Extracted from your big script for reuse)
+// -------------------------------------------------------------
+export const resourceProfiles = {
+  "grasslands": {
+    name: "Grasslands (Agriculture & Livestock)",
+    description: "Fertile land, balanced start.",
+    initialModifiers: { economy: 10, treasury: 50, happiness: 5 },
+    dailyIncome: { economy: 1.5, treasury: 15 }
+  },
+  // ... include all profiles you already had ...
+  "antarctic-sanctuary": {
+    name: "Antarctic Sanctuary (Isolation & Research)",
+    description: "Calm weather, brutal logistics.",
+    initialModifiers: { economy: -5, treasury: 40, happiness: -10, order: 5 },
+    dailyIncome: { economy: 0.8, treasury: 8 }
+  }
+};
+
+// -------------------------------------------------------------
+// FILE: src/sim/dayTick.js
+// One-day simulation step (NO policy/rule logic yet; just base flows)
+// -------------------------------------------------------------
+import { GameState, addLog } from '../core/state.js';
+import { clampMetrics } from './metrics.js';
+import { emit } from '../core/eventBus.js';
+import { resourceProfiles } from './resourceProfiles.js';
+
+export function simulateOneDay({ applyPoliciesFn = null, applyDilemmasFn = null } = {}) {
+  if (GameState.gameEnded) return;
+
+  GameState.day += 1;
+  const M = GameState.metrics;
+
+  // Daily treasury change from economy and resource profile
+  let dailyTreasuryChange = 0;
+  if (M.economy > 70) dailyTreasuryChange += 20;
+  else if (M.economy > 40) dailyTreasuryChange += 10;
+  else dailyTreasuryChange += 5;
+
+  // Social priority costs – pulled from government object
+  switch (GameState.government.social) {
+    case 'public-welfare': dailyTreasuryChange -= 15; break;
+    case 'security-order': dailyTreasuryChange -= 10; break;
+    case 'individual-liberty': dailyTreasuryChange -= 5; break;
+  }
+
+  const prof = resourceProfiles[GameState.government.resourceQuadrant];
+  if (prof?.dailyIncome) {
+    dailyTreasuryChange += prof.dailyIncome.treasury;
+    M.economy += (prof.dailyIncome.economy || 0) / 2;
+  }
+
+  M.treasury += dailyTreasuryChange;
+
+  // Passive drifts
+  switch (GameState.government.system) {
+    case 'authoritarian': M.order = Math.min(100, M.order + 1.5); M.happiness = Math.max(0, M.happiness - 1); break;
+    case 'direct-democracy': M.happiness = Math.min(100, M.happiness + 1.5); M.order = Math.max(0, M.order - 1); break;
+    case 'republic': M.happiness = Math.min(100, M.happiness + 0.5); M.order = Math.min(100, M.order + 0.5); break;
+  }
+
+  switch (GameState.government.economy) {
+    case 'free-market':
+      M.economy = Math.min(100, M.economy + 2);
+      M.happiness += (M.economy > 70 ? 0.5 : -0.5);
+      break;
+    case 'planned':
+      M.economy = Math.max(0, M.economy - 1);
+      M.order = Math.min(100, M.order + 0.5);
+      break;
+    case 'mixed':
+      M.economy = Math.min(100, M.economy + 0.5);
+      break;
+  }
+
+  switch (GameState.government.social) {
+    case 'public-welfare': M.happiness = Math.min(100, M.happiness + 2); M.economy = Math.max(0, M.economy - 1); break;
+    case 'security-order': M.order = Math.min(100, M.order + 2); M.freedom = Math.max(0, M.freedom - 1.5); break;
+    case 'individual-liberty': M.freedom = Math.min(100, M.freedom + 2); M.order = Math.max(0, M.order - 1.5); break;
+  }
+
+  // Hook for policy adjustments (UI-selected) – optional injection
+  if (applyPoliciesFn) applyPoliciesFn(M, GameState);
+
+  // Simple random events placeholder (you can replace with chaos engine)
+  if (Math.random() < 0.25) {
+    const events = [
+      { t: 'festival', log: 'A local festival boosts citizen mood!', effect: () => M.happiness = Math.min(100, M.happiness + 5) },
+      { t: 'research', log: 'Breakthrough in research boosts economy!', effect: () => M.economy = Math.min(100, M.economy + 7) }
+      // ... etc
+    ];
+    const ev = events[Math.floor(Math.random() * events.length)];
+    ev.effect();
+    addLog(ev.log);
+  }
+
+  clampMetrics(M);
+
+  // Dilemmas placeholder
+  if (applyDilemmasFn) applyDilemmasFn(M, GameState);
+
+  emit('DAY_TICKED', {day: GameState.day});
+}
+
+// -------------------------------------------------------------
+// FILE: src/sim/chaosEngine.js
+// Mother Nature chaos trigger scaffold (hash-based RNG)
+// -------------------------------------------------------------
+import { addLog } from '../core/state.js';
+import { sha256Hex, mulberry32 } from '../utils/random.js';
+
+// Config knobs
+export const CHAOS_BASE_RATE = 0.03; // 3% daily base chance per region
+export const REGION_WEIGHTS = { /* regionId: { hurricane: 1.0, quake: 0.1, ... } */ };
+
+export async function maybeTriggerChaos({ chatBuffer, regionId, dayIndex }) {
+  const digestHex = await sha256Hex(chatBuffer + SECRET_SALT + dayIndex);
+  const seed = parseInt(digestHex.slice(0, 8), 16);
+  const rng = mulberry32(seed);
+
+  const weight = REGION_WEIGHTS[regionId]?.hurricane || 0;
+  if (rng() < CHAOS_BASE_RATE * weight && cooldownOK(regionId, 'hurricane')) {
+    const severity = rng();
+    fireEvent(regionId, 'hurricane', { severity });
+  }
+}
+
+// Stubs to implement elsewhere or server-side:
+function cooldownOK(regionId, type) { return true; }
+function fireEvent(regionId, type, payload) {
+  addLog(`Mother Nature strikes: ${type} in ${regionId}`);
+  // apply metric effects here or emit event to sim
+}
+
+// -------------------------------------------------------------
+// FILE: src/utils/random.js
+// Hash + PRNG helpers
+// -------------------------------------------------------------
+export async function sha256Hex(str) {
+  const buf = new TextEncoder().encode(str);
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+export function mulberry32(a) {
+  return function() {
+    let t = a += 0x6D2B79F5;
+    t = Math.imul(t ^ t >>> 15, t | 1);
+    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  }
+}
+
+// -------------------------------------------------------------
+// FILE: src/ui/domRefs.js
+// Cache DOM elements safely (optional helper)
+// -------------------------------------------------------------
+export const $ = sel => document.querySelector(sel);
+export const $$ = sel => [...document.querySelectorAll(sel)];
+
+export const dom = {
+  govName: null,
+  daySpan: null,
+  metrics: {},
+  logList: null
+};
+
+export function bindDashboardDom() {
+  dom.govName = $('#current-gov-name');
+  dom.daySpan = $('#current-day');
+  dom.metrics = {
+    happiness: $('#metric-happiness'),
+    economy: $('#metric-economy'),
+    order: $('#metric-order'),
+    freedom: $('#metric-freedom'),
+    treasury: $('#metric-treasury')
+  };
+  dom.logList = $('#log-list');
+}
+
+// -------------------------------------------------------------
+// FILE: src/ui/updateUI.js
+// Render loop from state to DOM
+// -------------------------------------------------------------
+import { GameState } from '../core/state.js';
+import { dom } from './domRefs.js';
+
+export function updateMetricsDisplay() {
+  if (!dom.metrics.happiness) return; // not on this page
+  dom.metrics.happiness.textContent = GameState.metrics.happiness.toFixed(0);
+  dom.metrics.economy.textContent   = GameState.metrics.economy.toFixed(0);
+  dom.metrics.order.textContent     = GameState.metrics.order.toFixed(0);
+  dom.metrics.freedom.textContent   = GameState.metrics.freedom.toFixed(0);
+  dom.metrics.treasury.textContent  = `$${GameState.metrics.treasury.toFixed(0)}`;
+  dom.daySpan.textContent           = GameState.day;
+  dom.govName.textContent           = GameState.government.name;
+}
+
+export function prependLogItem(text) {
+  if (!dom.logList) return;
+  const li = document.createElement('li');
+  li.textContent = text;
+  dom.logList.prepend(li);
+  if (dom.logList.children.length > 100) dom.logList.removeChild(dom.logList.lastChild);
+}
+
+// -------------------------------------------------------------
+// FILE: src/ui/typewriter.js
+// Typewriter intro utility (for index)
+// -------------------------------------------------------------
+export function typewrite(el, text, { speed=30, onDone } = {}) {
+  el.textContent = '';
+  let i = 0;
+  const cursor = document.createElement('span');
+  cursor.className = 'cursor';
+  el.appendChild(cursor);
+  const tick = () => {
+    if (i < text.length) {
+      cursor.insertAdjacentText('beforebegin', text[i++]);
+      setTimeout(tick, speed);
+    } else {
+      cursor.remove();
+      onDone && onDone();
+    }
+  };
+  tick();
+}
+
+// -------------------------------------------------------------
+// FILE: src/main.js
+// Entry point loaded by pages (type="module")
+// Decides what page we’re on and wires things up.
+// -------------------------------------------------------------
+import { loadState, saveState, clearState } from './core/storage.js';
+import { GameState, initState, addLog } from './core/state.js';
+import { bindDashboardDom } from './ui/domRefs.js';
+import { updateMetricsDisplay, prependLogItem } from './ui/updateUI.js';
+import { simulateOneDay } from './sim/dayTick.js';
+import { on, emit } from './core/eventBus.js';
+import { defaultMetrics } from './sim/metrics.js';
+
+// UI-specific imports conditionally
+
+window.addEventListener('DOMContentLoaded', () => {
+  // Identify page by body id or presence of elements
+  const bodyId = document.body.id;
+
+  if (bodyId === 'game-dashboard-body') {
+    bindDashboardDom();
+
+    // Load or init state
+    if (!loadState()) {
+      console.warn('No state. Redirecting to create_game.html');
+      window.location.href = 'create_game.html';
+      return;
+    }
+
+    // Initial render
+    updateMetricsDisplay();
+    GameState.log.forEach(prependLogItem);
+
+    // Hook button(s)
+    const applyBtn = document.getElementById('apply-policies-btn');
+    applyBtn?.addEventListener('click', () => {
+      simulateOneDay();
+      saveState();
+      updateMetricsDisplay();
+    });
+
+    on('DAY_TICKED', () => {
+      prependLogItem(GameState.log[0]);
+      updateMetricsDisplay();
+    });
+
+  } else if (document.getElementById('ambassador-form')) {
+    // Create Game page
+    const form = document.getElementById('ambassador-form');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const gov = {
+        name: document.getElementById('gov-name').value,
+        system: document.getElementById('gov-system').value,
+        economy: document.getElementById('eco-policy').value,
+        social: document.getElementById('social-priority').value,
+        resourceQuadrant: document.getElementById('resource-quadrant').value,
+        userName: document.getElementById('user-name').value,
+        userEmail: document.getElementById('user-email').value,
+        userOS: document.getElementById('user-os').value,
+      };
+
+      const metrics = defaultMetrics();
+      initState(gov, metrics);
+      addLog('Initial society metrics calculated.');
+      saveState();
+      window.location.href = 'game_dashboard.html';
+    });
+
+  } else {
+    // Entrance page or other
+    // You can initialize typewriter etc. here or in a dedicated home.js
+  }
+});
+
+// =============================
+// END OF INFRA PACK
+// =============================
