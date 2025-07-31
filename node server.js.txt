@@ -1,0 +1,67 @@
+const socket = io();
+
+const chatWindow = document.getElementById('chat-window');
+const usernameInput = document.getElementById('username');
+const messageInput = document.getElementById('message');
+const sendButton = document.getElementById('send');
+
+sendButton.onclick = () => {
+    const username = usernameInput.value.trim();
+    const text = messageInput.value.trim();
+
+    if (!username || !text) {
+        alert('Please enter both a username and a message.');
+        return;
+    }
+
+    socket.emit('globalMessage', { username, text });
+    messageInput.value = '';
+};
+
+socket.on('globalMessage', ({ username, text }) => {
+    const messageEl = document.createElement('div');
+    messageEl.classList.add('message');
+    messageEl.innerHTML = `<span class="username">${username}:</span> ${text}`;
+    chatWindow.appendChild(messageEl);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+});
+const socket = io();
+
+// Elements
+const messages = document.getElementById('messages');
+const messageInput = document.getElementById('chat-message');
+const sendBtn = document.getElementById('send-btn');
+
+// Send message
+sendBtn.onclick = () => {
+    const msg = messageInput.value.trim();
+    if (msg) {
+        socket.emit('chatMessage', { text: msg, worldId: currentWorldId });
+        messageInput.value = '';
+    }
+};
+
+// Receive message
+socket.on('chatMessage', ({ text, sender, worldName }) => {
+    const messageElement = document.createElement('div');
+    messageElement.classList.add('message');
+
+    if (sender === 'system') {
+        messageElement.classList.add('system');
+        messageElement.textContent = `[${worldName}] System: ${text}`;
+    } else {
+        messageElement.classList.add('user');
+        messageElement.textContent = `[${worldName}] ${sender}: ${text}`;
+    }
+
+    messages.appendChild(messageElement);
+    messages.scrollTop = messages.scrollHeight;
+});
+
+// Initial connection
+socket.on('connect', () => {
+    socket.emit('joinWorld', currentWorldId);
+});
+
+// Current World (changeable when linking worlds)
+let currentWorldId = 'simulation-1';

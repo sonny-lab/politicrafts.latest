@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Politicraft - Government Headquarters</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            background: linear-gradient(135deg, 
+                #1a1a2e 0%, 
+                #16213e 25%, 
+                #0f3460 50%, 
+                #533483 75%, 
+                #e94560 100%);
+            background-size: 400% 400%;
+            animation: politicalSheen 20s ease-in-out infinite;
+            position: relative;
+        }
+        
+        @keyframes politicalSheen {
+            0% { background-position: 0% 50%; }
+            25% { background-position: 100% 0%; }
+            50% { background-position: 100% 100%; }
+            75% { background-position: 0% 100%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .main-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        /* Header with nation info */
+        .header {
+            padding: 15px 30px;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(20px);
+            border-bottom: 2px solid rgba(255,215,0,0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .nation-info {
+            color: #ffffff;
+        }
+        
+        .nation-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            font-family: 'Playfair Display', serif;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.7);
+            color: #ffd700;
+        }
+        
+        .leader-title {
+            font-size: 1rem;
+            color: rgba(255,255,255,0.9);
+            margin-top: 2px;
+        }
+        
+        .status-indicators {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .status-item {
+            text-align: center;
+            color: #ffffff;
+        }
+        
+        .status-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffd700;
+        }
+        
+        .status-label {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+        
+        /* Main office area */
+        .office-container {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            grid-template-rows: 1fr;
+            gap: 0;
+            height: calc(100vh - 80px);
+        }
+        
+        /* Left sidebar - Communications */
+        .left-panel {
+            background: rgba(0,0,0,0.25);
+            backdrop-filter: blur(15px);
+            border-right: 1px solid rgba(255,215,0,0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .panel-header {
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border-bottom: 1px solid rgba(255,215,0,0.2);
+            color: #ffd700;
+            font-weight: 600;
+            text-align: center;
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .communications {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .message-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 3px solid #ffd700;
+            transition: all 0.3s ease;
+        }
+        
+        .message-item:hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateX(5px);
+        }
+        
+        .message-sender {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #ffd700;
+            margin-bottom: 5px;
+        }
+        
+        .message-text {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.9);
+            line-height: 1.4;
+        }
+        
+        .message-time {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.6);
+            margin-top: 5px;
+        }
+        
+        /* Center area - Main office */
+        .main-office {
+            background: rgba(0,0,0,0.15);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .office-view {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            position: relative;
+        }
+        
+        .presidential-desk {
+            width: 400px;
+            height: 200px;
+            background: linear-gradient(135deg, rgba(139,69,19,0.8), rgba(101,67,33,0.8));
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid rgba(255,215,0,0.3);
+            position: relative;
+        }
+        
+        .desk-items {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .action-button {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, rgba(255,215,0,0.8), rgba(255,193,7,0.8));
+            color: #1a1a2e;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            background: linear-gradient(135deg, rgba(255,215,0,1), rgba(255,193,7,1));
+        }
+        
+        .window-view {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 200px;
+            height: 120px;
+            background: linear-gradient(135deg, rgba(135,206,235,0.3), rgba(70,130,180,0.3));
+            border-radius: 10px;
+            border: 2px solid rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255,255,255,0.8);
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        
+        /* Right sidebar - Crisis & Alerts */
+        .right-panel {
+            background: rgba(0,0,0,0.25);
+            backdrop-filter: blur(15px);
+            border-left: 1px solid rgba(255,215,0,0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .crisis-alerts {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .alert-item {
+            background: rgba(233,69,96,0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 3px solid #e94560;
+            transition: all 0.3s ease;
+        }
+        
+        .alert-item.warning {
+            background: rgba(255,193,7,0.2);
+            border-left-color: #ffc107;
+        }
+        
+        .alert-item.info {
+            background: rgba(0,123,255,0.2);
+            border-left-color: #007bff;
+        }
+        
+        .alert-item:hover {
+            background: rgba(233,69,96,0.3);
+            transform: translateX(-5px);
+        }
+        
+        .alert-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 5px;
+        }
+        
+        .alert-text {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.9);
+            line-height: 1.3;
+        }
+        
+        .alert-time {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.6);
+            margin-top: 5px;
+        }
+        
+        /* Bottom status bar */
+        .status-bar {
+            padding: 10px 30px;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255,215,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: rgba(255,255,255,0.9);
+            font-size: 0.9rem;
+        }
+        
+        .game-time {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .time-item {
+            text-align: center;
+        }
+        
+        .time-value {
+            color: #ffd700;
+            font-weight: 600;
+        }
+        
+        /* Floating particles for atmosphere */
+        .floating-particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: rgba(255,215,0,0.4);
+            border-radius: 50%;
+            animation: floatParticle 25s linear infinite;
+        }
+        
+        .particle:nth-child(1) { left: 10%; animation-delay: 0s; }
+        .particle:nth-child(2) { left: 30%; animation-delay: 5s; }
+        .particle:nth-child(3) { left: 50%; animation-delay: 10s; }
+        .particle:nth-child(4) { left: 70%; animation-delay: 15s; }
+        .particle:nth-child(5) { left: 90%; animation-delay: 20s; }
+        
+        @keyframes floatParticle {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        @media (max-width: 1200px) {
+            .office-container {
+                grid-template-columns: 250px 1fr 250px;
+            }
+            
+            .presidential-desk {
+                width: 300px;
+                height: 150px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .office-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr auto;
+            }
+            
+            .left-panel, .right-panel {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="floating-particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+        
+        <div class="header">
+            <div class="nation-info">
+                <div class="nation-name">United States of America</div>
+                <div class="leader-title">President - Will Harrison</div>
+            </div>
+            <div class="status-indicators">
+                <div class="status-item">
+                    <div class="status-value">Level 8</div>
+                    <div class="status-label">Rank</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-value">$2.4T</div>
+                    <div class="status-label">GDP</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-value">78%</div>
+                    <div class="status-label">Approval</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="office-container">
+            <div class="left-panel">
+                <div class="panel-header">Diplomatic Communications</div>
+                <div class="communications">
+                    <div class="message-item">
+                        <div class="message-sender">Chancellor AI-Germany</div>
+                        <div class="message-text">Requesting trade agreement for automotive exports. Our manufacturing sector seeks new markets.</div>
+                        <div class="message-time">2 hours ago</div>
+                    </div>
+                    <div class="message-item">
+                        <div class="message-sender">Prime Minister AI-Canada</div>
+                        <div class="message-text">Border security concerns rising. Need joint task force meeting.</div>
+                        <div class="message-time">4 hours ago</div>
+                    </div>
+                    <div class="message-item">
+                        <div class="message-sender">President AI-Brazil</div>
+                        <div class="message-text">Amazon preservation project needs international funding support.</div>
+                        <div class="message-time">6 hours ago</div>
+                    </div>
+                    <div class="message-item">
+                        <div class="message-sender">Premier AI-China</div>
+                        <div class="message-text">Technology transfer negotiations ready for final review.</div>
+                        <div class="message-time">8 hours ago</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="main-office">
+                <div class="office-view">
+                    <div class="window-view">
+                        View of Capital City<br>
+                        Clear Skies<br>
+                        Temperature: 72°F
+                    </div>
+                    
+                    <div class="presidential-desk">
+                        <div class="desk-items">
+                            <button class="action-button" onclick="openDiplomacy()">Diplomacy</button>
+                            <button class="action-button" onclick="openEconomy()">Economy</button>
+                            <button class="action-button" onclick="openMilitary()">Defense</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="right-panel">
+                <div class="panel-header">Crisis Management</div>
+                <div class="crisis-alerts">
+                    <div class="alert-item">
+                        <div class="alert-title">Hurricane Forming</div>
+                        <div class="alert-text">Category 2 hurricane detected 400 miles southeast. Expected landfall in 72 hours.</div>
+                        <div class="alert-time">15 minutes ago</div>
+                    </div>
+                    <div class="alert-item warning">
+                        <div class="alert-title">Economic Indicator</div>
+                        <div class="alert-text">Inflation rate increased 0.3% this quarter. Federal Reserve monitoring closely.</div>
+                        <div class="alert-time">1 hour ago</div>
+                    </div>
+                    <div class="alert-item info">
+                        <div class="alert-title">Global Meeting</div>
+                        <div class="alert-text">UN Climate Summit scheduled for next week. Attendance required for Level 13.</div>
+                        <div class="alert-time">3 hours ago</div>
+                    </div>
+                    <div class="alert-item">
+                        <div class="alert-title">Intelligence Report</div>
+                        <div class="alert-text">Cyber attack attempts on infrastructure increased 40% this month.</div>
+                        <div class="alert-time">5 hours ago</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-bar">
+            <div class="game-time">
+                <div class="time-item">
+                    <div class="time-value">127</div>
+                    <div>Hours Played</div>
+                </div>
+                <div class="time-item">
+                    <div class="time-value">March 2025</div>
+                    <div>Game Date</div>
+                </div>
+            </div>
+            <div class="game-info">
+                <span>Next Global Meeting: 5 days | Disaster Recovery: 89%</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openDiplomacy() {
+            console.log('Opening diplomacy interface...');
+            // Navigate to diplomatic communications interface
+        }
+        
+        function openEconomy() {
+            console.log('Opening economic management...');
+            // Navigate to economic dashboard
+        }
+        
+        function openMilitary() {
+            console.log('Opening defense management...');
+            // Navigate to military/intelligence interface
+        }
+        
+        // Simulate real-time updates
+        function updateAlerts() {
+            // Add new alerts or update existing ones
+            console.log('Updating crisis alerts...');
+        }
+        
+        // Auto-update every 30 seconds
+        setInterval(updateAlerts, 30000);
+        
+        // Add some interactive hover effects
+        document.addEventListener('DOMContentLoaded', function() {
+            const desk = document.querySelector('.presidential-desk');
+            
+            desk.addEventListener('mouseenter', function() {
+                this.style.transform = 'scale(1.02)';
+            });
+            
+            desk.addEventListener('mouseleave', function() {
+                this.style.transform = 'scale(1)';
+            });
+        });
+    </script>
+</body>
+</html>

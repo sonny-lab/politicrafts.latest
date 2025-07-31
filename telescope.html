@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Politicraft – Telescope Explorer</title>
+  <style>
+    :root {
+      --gold: #c9a449;
+      --panel: #182026;
+      --text: #e6e9ec;
+      --accent: #24313b;
+      --dark-bg: #0b0f13;
+    }
+    
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: var(--dark-bg);
+      color: var(--text);
+      font-family: "Crimson Pro", serif;
+      overflow: hidden;
+    }
+    
+    .explorer {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .viewport {
+      flex: 1;
+      position: relative;
+      background: #000;
+      cursor: grab;
+    }
+    
+    .viewport:active {
+      cursor: grabbing;
+    }
+    
+    #earth-img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, 
+        #1a472a 0%, #2d5a2d 15%, 
+        #8b4513 30%, #d2691e 45%, 
+        #4682b4 60%, #2e8b57 75%, 
+        #dc143c 90%, #800080 100%);
+      transform-origin: center center;
+      will-change: transform;
+    }
+    
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    
+    .hot {
+      fill: rgba(201,164,73,0.15);
+      stroke: rgba(201,164,73,0.4);
+      stroke-width: 2;
+      pointer-events: auto;
+      transition: fill .2s;
+      cursor: pointer;
+    }
+    
+    .hot:hover {
+      fill: rgba(201,164,73,0.35);
+    }
+    
+    .info {
+      width: 420px;
+      max-width: 35vw;
+      background: var(--panel);
+      border-left: 1px solid #24313b;
+      padding: 1rem 1.25rem;
+      overflow-y: auto;
+      font-size: 0.9rem;
+    }
+    
+    .info h2 {
+      margin: 0.2rem 0 0.6rem;
+      font-family: "Cinzel", serif;
+      color: var(--gold);
+      font-size: 1.3rem;
+    }
+    
+    .info-section {
+      margin: 1rem 0;
+      padding: 0.8rem;
+      background: rgba(36, 49, 59, 0.3);
+      border-left: 3px solid var(--gold);
+      border-radius: 4px;
+    }
+    
+    .info-section h3 {
+      margin: 0 0 0.5rem 0;
+      color: var(--gold);
+      font-size: 1rem;
+      font-family: "Cinzel", serif;
+    }
+    
+    .info-section ul {
+      margin: 0.3rem 0;
+      padding-left: 1rem;
+      font-size: 0.85rem;
+    }
+    
+    .info-section li {
+      margin: 0.3rem 0;
+      line-height: 1.4;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    
+    .stat-box {
+      background: rgba(36, 49, 59, 0.5);
+      padding: 0.6rem;
+      border-radius: 4px;
+      text-align: center;
+    }
+    
+    .stat-value {
+      color: var(--gold);
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    
+    .stat-label {
+      font-size: 0.8rem;
+      margin-top: 0.2rem;
+    }
+    
+    .controls {
+      position: absolute;
+      bottom: 1rem;
+      left: 1rem;
+      display: flex;
+      gap: 0.4rem;
+      z-index: 10;
+    }
+    
+    .controls button {
+      padding: 0.4rem 0.6rem;
+      background: #1f2730;
+      border: 1px solid #34414c;
+      border-radius: 6px;
+      color: var(--gold);
+      font-family: "Cinzel", serif;
+      cursor: pointer;
+    }
+    
+    .controls button:hover {
+      background: #2a3540;
+    }
+    
+    #choose-btn {
+      margin-top: 1.5rem;
+      padding: 0.8rem 1.5rem;
+      background: var(--accent);
+      border: 2px solid var(--gold);
+      color: var(--gold);
+      border-radius: 8px;
+      font-family: "Cinzel", serif;
+      font-size: 1rem;
+      cursor: pointer;
+      opacity: 0.5;
+      width: 100%;
+      transition: all 0.3s;
+    }
+    
+    #choose-btn.enabled {
+      opacity: 1;
+      background: rgba(201,164,73,0.1);
+    }
+    
+    #choose-btn.enabled:hover {
+      background: rgba(201,164,73,0.2);
+      transform: translateY(-2px);
+    }
+    
+    .description {
+      font-style: italic;
+      color: #b8bec4;
+      margin: 0.5rem 0 1rem 0;
+      line-height: 1.4;
+    }
+    
+    @media (max-width: 1200px) {
+      .info {
+        width: 380px;
+        max-width: 40vw;
+      }
+    }
+    
+    @media (max-width: 900px) {
+      .info {
+        position: absolute;
+        right: 0;
+        top: 0;
+        height: 60%;
+        width: 100%;
+        max-width: none;
+        border-left: none;
+        border-top: 1px solid #24313b;
+      }
+      
+      .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="explorer" class="explorer">
+    <div class="viewport" id="viewport">
+      <div id="earth-img"></div>
+      
+      <svg id="overlay" class="overlay" viewBox="0 0 1920 960" preserveAspectRatio="xMidYMid slice">
+        <polygon data-q="grasslands"      points="0,480 480,480 480,960 0,960"            class="hot" />
+        <polygon data-q="forests"         points="480,480 960,480 960,960 480,960"        class="hot" />
+        <polygon data-q="desert"          points="960,480 1440,480 1440,960 960,960"      class="hot" />
+        <polygon data-q="polar"           points="1440,480 1920,480 1920,960 1440,960"    class="hot" />
+        <polygon data-q="coastal-trade"   points="0,0 480,0 480,480 0,480"                class="hot" />
+        <polygon data-q="mountainous"     points="480,0 960,0 960,480 480,480"            class="hot" />
+        <polygon data-q="island-paradise" points="960,0 1440,0 1440,480 960,480"          class="hot" />
+        <polygon data-q="volcanic-rich"   points="1440,0 1920,0 1920,480 1440,480"        class="hot" />
+      </svg>
+    </div>
+
+    <aside class="info" id="info">
+      <h2 id="q-name">Select a Region</h2>
+      <p id="q-desc" class="description">Click a highlighted area on the map to view detailed regional information for strategic government planning.</p>
+      
+      <div class="stats-grid" id="stats-grid" style="display: none;">
+        <div class="stat-box">
+          <div class="stat-value" id="population-stat">--</div>
+          <div class="stat-label">Population</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="gdp-stat">--</div>
+          <div class="stat-label">GDP Potential</div>
+        </div>
+      </div>
+      
+      <div id="detailed-info"></div>
+      
+      <button id="choose-btn" disabled>Establish Government Here</button>
+    </aside>
+
+    <div class="controls">
+      <button data-act="zoom-in">＋</button>
+      <button data-act="zoom-out">－</button>
+      <button data-act="rotate-left">⟲</button>
+      <button data-act="rotate-right">⟳</button>
+      <button data-act="reset">Reset</button>
+    </div>
+  </div>
+
+  <script>
+    // Enhanced quadrant data
+    const quadrantData = {
+      "grasslands": {
+        "name": "Central Plains Alliance",
+        "description": "Vast fertile plains spanning 2.3 million km². The agricultural heartland with stable growing seasons and predictable weather patterns. Ideal for food security-based economies.",
+        "primaryResources": [
+          "Wheat, corn, soybeans - 340M metric tons annually",
+          "Cattle ranching - 85M head livestock capacity",
+          "Dairy production - 120B liters annually",
+          "Poultry farming - 2.1B birds annually"
+        ],
+        "mineralWealth": [
+          "Iron ore deposits - 45M tons proven reserves",
+          "Limestone quarries - Industrial grade",
+          "Clay deposits - Ceramics & construction",
+          "Sand & gravel - Infrastructure development",
+          "Salt flats - Chemical industry potential"
+        ],
+        "economicAdvantages": [
+          "Food export powerhouse - guaranteed global demand",
+          "Low startup costs for agricultural ventures",
+          "Established supply chain infrastructure",
+          "Railroad network connecting 12 major ports",
+          "Processing facilities for value-added exports"
+        ],
+        "tradeOpportunities": [
+          "Grain exports to urban coastal regions",
+          "Livestock products to protein-deficient areas",
+          "Biofuel production from agricultural waste",
+          "Organic farming premium markets",
+          "Food processing technology exports"
+        ],
+        "governanceConsiderations": [
+          "Cooperative farming communities - democratic traditions",
+          "Seasonal labor management challenges",
+          "Water rights allocation systems needed",
+          "Rural vs urban development balance",
+          "Agricultural subsidy policy decisions"
+        ],
+        "challenges": [
+          "Climate change adaptation required",
+          "Soil conservation programs needed",
+          "Market price volatility",
+          "Seasonal employment patterns",
+          "Water table management"
+        ],
+        "population": "67 million",
+        "gdpPotential": "$420B"
+      },
+      
+      "forests": {
+        "name": "Northern Timber Federation",
+        "description": "Dense boreal and temperate forests covering 1.8 million km². Sustainable forestry meets conservation in this carbon-rich ecosystem with emerging green technology sectors.",
+        "primaryResources": [
+          "Softwood timber - 180M cubic meters sustainable yield",
+          "Hardwood species - Premium furniture grade",
+          "Paper pulp - 25M tons production capacity",
+          "Maple syrup - 15M liters annually",
+          "Wild berries & mushrooms - Specialty food exports"
+        ],
+        "mineralWealth": [
+          "Peat deposits - Energy and agriculture",
+          "Granite quarries - Construction stone",
+          "Quartz deposits - Technology applications",
+          "Clay beds - Pottery and tiles",
+          "Stream gravel - Construction aggregate"
+        ],
+        "economicAdvantages": [
+          "Renewable resource base - long-term sustainability",
+          "Carbon credit trading potential worth $2.8B annually",
+          "Eco-tourism industry - $890M annual revenue",
+          "Pharmaceutical bioprospecting opportunities",
+          "Sustainable building materials demand growing 15% yearly"
+        ],
+        "tradeOpportunities": [
+          "Luxury timber exports to furniture markets",
+          "Paper products to global publishing industry",
+          "Essential oils and natural medicines",
+          "Eco-friendly building materials",
+          "Adventure tourism packages"
+        ],
+        "governanceConsiderations": [
+          "Environmental protection vs economic development balance",
+          "Indigenous land rights and partnerships",
+          "Sustainable harvest quota management",
+          "Wildlife conservation programs",
+          "Fire prevention and management systems"
+        ],
+        "challenges": [
+          "Wildfire risk management - $450M annual prevention costs",
+          "Seasonal accessibility issues",
+          "Environmental regulation compliance",
+          "Market demand fluctuations",
+          "Climate change forest adaptation"
+        ],
+        "population": "34 million",
+        "gdpPotential": "$285B"
+      },
+
+      "desert": {
+        "name": "Solar Emirates Coalition",
+        "description": "Arid expanse of 2.1 million km² rich in mineral wealth and renewable energy potential. The ultimate high-risk, high-reward economy built on resource extraction and energy export.",
+        "primaryResources": [
+          "Solar energy potential - 850 GWh capacity",
+          "Gold deposits - 2,400 tons proven reserves",
+          "Diamond mines - 8.5M carats annually",
+          "Rare earth elements - Critical for technology",
+          "Uranium deposits - Nuclear fuel potential"
+        ],
+        "mineralWealth": [
+          "Coal seams - 45 billion tons reserves",
+          "Copper ore - 12M tons extractable",
+          "Silver deposits - 890 tons annually",
+          "Platinum group metals - Advanced technology applications",
+          "Lithium brines - Battery manufacturing"
+        ],
+        "economicAdvantages": [
+          "Highest per-capita resource wealth - $2.3M per resident",
+          "24/7 solar energy generation potential",
+          "Low labor costs for mining operations",
+          "Strategic position for energy exports",
+          "Minimal environmental restrictions historically"
+        ],
+        "tradeOpportunities": [
+          "Precious metals to luxury goods markets",
+          "Energy exports to power-hungry regions",
+          "Rare earth elements to tech manufacturers",
+          "Solar technology and expertise export",
+          "Mining equipment and services"
+        ],
+        "governanceConsiderations": [
+          "Resource wealth distribution challenges",
+          "Environmental protection vs extraction balance",
+          "Water scarcity management critical",
+          "Foreign investment regulation needed",
+          "Boom-bust economic cycle management"
+        ],
+        "challenges": [
+          "Extreme heat - infrastructure stress",
+          "Water scarcity - $12B desalination investment needed",
+          "Sandstorm damage to equipment",
+          "Remote location logistics costs",
+          "Environmental remediation requirements"
+        ],
+        "population": "23 million",
+        "gdpPotential": "$890B"
+      },
+
+      "polar": {
+        "name": "Arctic Resource Republic",
+        "description": "Frozen frontier of 1.9 million km² containing vast energy reserves beneath ice sheets. Extreme conditions meet extreme wealth in this emerging energy superpower.",
+        "primaryResources": [
+          "Natural gas reserves - 850 trillion cubic feet",
+          "Crude oil deposits - 67 billion barrels proven",
+          "Arctic char & salmon - Premium seafood exports",
+          "Seal products - Traditional and luxury markets",
+          "Fresh water reserves - Iceberg harvesting potential"
+        ],
+        "mineralWealth": [
+          "Coal deposits - High-grade anthracite",
+          "Iron ore - Arctic-grade extraction",
+          "Nickel deposits - Industrial applications",
+          "Zinc and lead ores - Construction industry",
+          "Permafrost carbon - Research applications"
+        ],
+        "economicAdvantages": [
+          "Energy export monopoly potential - $340B annual revenue",
+          "Strategic shipping route control - Arctic passage",
+          "Untapped resource base - first-mover advantage",
+          "Climate change opening new opportunities",
+          "Premium pricing for Arctic-sourced products"
+        ],
+        "tradeOpportunities": [
+          "Liquefied natural gas to energy-hungry nations",
+          "Crude oil to global refineries",
+          "Premium Arctic seafood to luxury markets",
+          "Fresh water exports to arid regions",
+          "Arctic research and technology services"
+        ],
+        "governanceConsiderations": [
+          "Indigenous peoples' rights and partnerships",
+          "Environmental protection in pristine ecosystem",
+          "International Arctic treaty compliance",
+          "Extreme weather emergency management",
+          "Resource revenue sovereign wealth fund creation"
+        ],
+        "challenges": [
+          "Brutal winter conditions - 8 months below -30°C",
+          "Massive infrastructure investment required - $890B",
+          "Environmental activism and regulations",
+          "Shipping limited to 4-month season",
+          "Equipment failure in extreme cold"
+        ],
+        "population": "12 million",
+        "gdpPotential": "$670B"
+      },
+
+      "coastal-trade": {
+        "name": "Maritime Commerce Federation",
+        "description": "Strategic coastline spanning 3,400km with natural harbors and established trade routes. The natural choice for trade-based economies and international commerce.",
+        "primaryResources": [
+          "Deep-water harbors - 23 major ports",
+          "Commercial fisheries - 890,000 tons annually",
+          "Shellfish aquaculture - Premium oysters & lobster",
+          "Seaweed farming - Food and industrial applications",
+          "Salt production - 2.3M tons annually"
+        ],
+        "mineralWealth": [
+          "Offshore oil platforms - 12B barrels accessible",
+          "Natural gas fields - Underwater extraction",
+          "Sand dredging operations - Construction industry",
+          "Limestone coastal deposits",
+          "Phosphate nodules - Fertilizer industry"
+        ],
+        "economicAdvantages": [
+          "Natural trade hub - connects 3 major shipping lanes",
+          "Established logistics networks",
+          "Financial services sector - $67B annual revenue",
+          "Tourism infrastructure - 45M visitors annually",
+          "Shipping and maritime services expertise"
+        ],
+        "tradeOpportunities": [
+          "Container shipping transit fees - $12B annually",
+          "Premium seafood exports to global markets",
+          "Financial and banking services",
+          "Maritime insurance and legal services",
+          "Cruise tourism and coastal recreation"
+        ],
+        "governanceConsiderations": [
+          "International trade law compliance",
+          "Port security and customs management",
+          "Coastal zone management and protection",
+          "Immigration and border control",
+          "Maritime environmental regulations"
+        ],
+        "challenges": [
+          "Hurricane season - $2.3B annual damage risk",
+          "Sea level rise adaptation required",
+          "Port congestion management",
+          "International trade disputes",
+          "Coastal erosion mitigation - $890M annually"
+        ],
+        "population": "89 million",
+        "gdpPotential": "$1.2T"
+      },
+
+      "mountainous": {
+        "name": "Highland Defense Alliance",
+        "description": "Rugged mountain ranges covering 1.6 million km² with natural defensive positions and mineral wealth. Perfect for nations prioritizing security and specialized industries.",
+        "primaryResources": [
+          "Hydroelectric potential - 125 GW capacity",
+          "Alpine timber - Specialty construction wood",
+          "Mountain spring water - Premium bottled water",
+          "Alpine agriculture - High-value herbs & vegetables",
+          "Granite quarries - Premium building stone"
+        ],
+        "mineralWealth": [
+          "Copper deposits - High-grade mountain ores",
+          "Silver and gold veins - Historic mining regions",
+          "Marble quarries - Luxury construction material",
+          "Industrial minerals - Mica, feldspar, quartz",
+          "Gemstone deposits - Emeralds, sapphires"
+        ],
+        "economicAdvantages": [
+          "Natural defensive positions - military advantage",
+          "Clean energy production - hydroelectric power",
+          "Premium product positioning - mountain-made branding",
+          "Tourism revenue - Adventure and winter sports",
+          "Specialty manufacturing - precision instruments"
+        ],
+        "tradeOpportunities": [
+          "Premium bottled water exports - $3.4B market",
+          "Precision manufacturing - Swiss-model economy",
+          "Adventure tourism packages",
+          "Renewable energy exports to lowland regions",
+          "Luxury stone and mineral exports"
+        ],
+        "governanceConsiderations": [
+          "Terrain-based transportation challenges",
+          "Avalanche and landslide management",
+          "Sustainable tourism development",
+          "Mountain community connectivity",
+          "Defense strategy advantages"
+        ],
+        "challenges": [
+          "Avalanche risk - 67 high-risk zones",
+          "Limited arable land - only 12% suitable for farming",
+          "Transportation costs 3x higher than plains",
+          "Seasonal accessibility issues",
+          "Aging population in remote communities"
+        ],
+        "population": "28 million",
+        "gdpPotential": "$380B"
+      },
+
+      "island-paradise": {
+        "name": "Tropical Island Confederation",
+        "description": "Archipelago of 847 islands across 890,000 km² of ocean. Paradise destination with unique biodiversity and high-value tourism potential.",
+        "primaryResources": [
+          "Tourism infrastructure - 12M visitors capacity",
+          "Tropical fruit plantations - Exotic export varieties",
+          "Spice cultivation - Premium cooking ingredients",
+          "Pearl aquaculture - Luxury jewelry market",
+          "Coconut products - Oil, fiber, food applications"
+        ],
+        "mineralWealth": [
+          "Coral sand - Construction and glass industry",
+          "Volcanic rock - Decorative stone exports",
+          "Salt evaporation ponds - Gourmet sea salt",
+          "Phosphate deposits - From seabird colonies",
+          "Rare corals - Research and aquarium trade"
+        ],
+        "economicAdvantages": [
+          "Year-round tourism season",
+          "Exclusive luxury market positioning",
+          "Marine biodiversity - pharmaceutical research",
+          "Strategic shipping lane position",
+          "Tax haven potential - financial services"
+        ],
+        "tradeOpportunities": [
+          "Luxury resort and spa services - $23B industry",
+          "Exotic food and spice exports",
+          "Marine research and biotechnology",
+          "Yacht services and marina operations",
+          "Cultural and eco-tourism experiences"
+        ],
+        "governanceConsiderations": [
+          "Environmental protection vs development",
+          "Hurricane and tsunami preparedness",
+          "Fresh water scarcity management",
+          "Inter-island transportation coordination",
+          "Tourism carrying capacity limits"
+        ],
+        "challenges": [
+          "Typhoon season - Category 5 storm risk",
+          "Limited fresh water - desalination required",
+          "Waste management on isolated islands",
+          "Climate change - sea level rise threat",
+          "Economic dependence on tourism volatility"
+        ],
+        "population": "19 million",
+        "gdpPotential": "$320B"
+      },
+
+      "volcanic-rich": {
+        "name": "Geothermal Energy Republic",
+        "description": "Active volcanic region covering 1.4 million km² with incredible soil fertility and geothermal energy. High-risk, high-reward territory for advanced civilizations.",
+        "primaryResources": [
+          "Geothermal energy - 89 GW potential capacity",
+          "Volcanic soil agriculture - 3x normal crop yields",
+          "Sulfur deposits - Industrial chemical applications",
+          "Volcanic glass (obsidian) - Specialty tool industry",
+          "Hot springs - Medical and tourism applications"
+        ],
+        "mineralWealth": [
+          "Uranium and thorium - Nuclear fuel reserves",
+          "Rare earth elements - Concentrated in volcanic soils",
+          "Pumice deposits - Construction and industrial use",
+          "Volcanic ash - Agricultural soil enhancement",
+          "Geothermal minerals - Lithium extraction potential"
+        ],
+        "economicAdvantages": [
+          "Unlimited clean energy potential",
+          "Super-fertile agricultural yields",
+          "Unique medical tourism - therapeutic hot springs",
+          "Advanced materials from volcanic processes",
+          "Energy-intensive industries - aluminum, steel"
+        ],
+        "tradeOpportunities": [
+          "Clean energy exports to neighboring regions",
+          "Premium agricultural products - volcanic-grown",
+          "Medical and wellness tourism",
+          "Advanced materials and rare earth exports",
+          "Geothermal technology and expertise"
+        ],
+        "governanceConsiderations": [
+          "Volcanic eruption early warning systems",
+          "Population evacuation planning",
+          "Land use zoning around active volcanoes",
+          "Environmental monitoring and protection",
+          "Nuclear material security protocols"
+        ],
+        "challenges": [
+          "Volcanic eruption risk - Last major event 1987",
+          "Ash cloud disruption to air travel",
+          "Seismic activity - earthquake preparedness",
+          "Toxic gas emissions in some areas",
+          "Insurance costs 5x higher than stable regions"
+        ],
+        "population": "31 million",
+        "gdpPotential": "$520B"
+      }
+    };
+
+    // Pan/Zoom/Rotate state
+    let scale = 1;
+    let rot = 0;
+    let tx = 0, ty = 0;
+    let dragging = false;
+    let lastX = 0, lastY = 0;
+
+    const viewport = document.getElementById('viewport');
+    const earthImg = document.getElementById('earth-img');
+    const overlay = document.getElementById('overlay');
+    const qNameEl = document.getElementById('q-name');
+    const qDescEl = document.getElementById('q-desc');
+    const detailedInfo = document.getElementById('detailed-info');
+    const chooseBtn = document.getElementById('choose-btn');
+    const statsGrid = document.getElementById('stats-grid');
+    const populationStat = document.getElementById('population-stat');
+    const gdpStat = document.getElementById('gdp-stat');
+
+    function applyTransform() {
+      const transform = `translate(${tx}px, ${ty}px) scale(${scale}) rotate(${rot}deg)`;
+      earthImg.style.transform = transform;
+      overlay.style.transform = transform;
+    }
+
+    // Mouse drag
+    viewport.addEventListener('mousedown', e => {
+      dragging = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+    });
+
+    window.addEventListener('mouseup', () => dragging = false);
+
+    window.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      tx += dx;
+      ty += dy;
+      applyTransform();
+    });
+
+    // Wheel zoom
+    viewport.addEventListener('wheel', e => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      const prevScale = scale;
+      scale = Math.min(Math.max(0.4, scale + delta), 4);
+      
+      const rect = viewport.getBoundingClientRect();
+      const cx = e.clientX - rect.left;
+      const cy = e.clientY - rect.top;
+      tx = cx - (cx - tx) * (scale / prevScale);
+      ty = cy - (cy - ty) * (scale / prevScale);
+      applyTransform();
+    }, { passive: false });
+
+    // Controls
+    document.querySelector('.controls').addEventListener('click', e => {
+      const act = e.target.getAttribute('data-act');
+      if (!act) return;
+      
+      if (act === 'zoom-in') scale = Math.min(scale + 0.1, 4);
+      if (act === 'zoom-out') scale = Math.max(scale - 0.1, 0.4);
+      if (act === 'rotate-left') rot = (rot - 15) % 360;
+      if (act === 'rotate-right') rot = (rot + 15) % 360;
+      if (act === 'reset') { scale = 1; rot = 0; tx = 0; ty = 0; }
+      
+      applyTransform();
+    });
+
+    // Region click
+    overlay.addEventListener('click', e => {
+      const qId = e.target.getAttribute('data-q');
+      if (!qId) return;
+      selectQuadrant(qId);
+    });
+
+    function selectQuadrant(id) {
+      const q = quadrantData[id];
+      if (!q) return;
+
+      qNameEl.textContent = q.name;
+      qDescEl.textContent = q.description;
+      
+      // Show stats
+      statsGrid.style.display = 'grid';
+      populationStat.textContent = q.population;
+      gdpStat.textContent = q.gdpPotential;
+
+      // Build detailed info sections
+      detailedInfo.innerHTML = `
+        <div class="info-section">
+          <h3>Primary Resources</h3>
+          <ul>${q.primaryResources.map(r => `<li>${r}</li>`).join('')}</ul>
+        </div>
+        <div class="info-section">
+          <h3>Mineral Wealth</h3>
+          <ul>${q.mineralWealth.map(m => `<li>${m}</li>`).join('')}</ul>
+        </div>
+        <div class="info-section">
+          <h3>Economic Advantages</h3>
+          <ul>${q.economicAdvantages.map(e => `<li>${e}</li>`).join('')}</ul>
+        </div>
+        <div class="info-section">
+          <h3>Trade Opportunities</h3>
+          <ul>${q.tradeOpportunities.map(t => `<li>${t}</li>`).join('')}</ul>
+        </div>
+        <div class="info-section">
+          <h3>Governance Considerations</h3>
+          <ul>${q.governanceConsiderations.map(g => `<li>${g}</li>`).join('')}</ul>
+        </div>
+        <div class="info-section">
+          <h3>Challenges</h3>
+          <ul>${q.challenges.map(c => `<li>${c}</li>`).join('')}</ul>
+        </div>
+      `;
+
+      chooseBtn.disabled = false;
+      chooseBtn.classList.add('enabled');
+      chooseBtn.onclick = () => {
+        window.parent.postMessage({ type: 'SET_QUADRANT', value: id }, '*');
+      };
+    }
+
+    // Initial transform
+    applyTransform();
+  </script>
+</body>
+</html>
+

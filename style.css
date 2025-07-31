@@ -1,0 +1,242 @@
+/* Politicraft Global Stylesheet */
+
+/* Root Variables (common design tokens) */
+:root {
+    --bg: #0e1114; /* deep, professional background */
+    --panel: #182026; /* default panel background */
+    --panel-accent: linear-gradient(135deg, #1f2a33, #10161b 70%); /* panel gradient */
+    --gold: #c9a449; /* primary accent gold */
+    --gold-soft: #b89334; /* softer gold for borders/details */
+    --text-main: #e6e9ec; /* main body text color */
+    --text-dim: #9aa4ae; /* dimmed text color */
+    --accent: #2f89ff; /* Example blue for future UI elements */
+    --danger: #d04f4f; /* Example red for warning/error states */
+    --focus-ring: 0 0 0 3px rgba(201,164,73,0.3); /* focus ring for accessibility */
+    font-size: 16px; /* Base font size */
+}
+
+/* General Box Sizing */
+* { box-sizing: border-box; }
+/* HTML and Body Defaults (Continued from Part 1) */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+body {
+    background: radial-gradient(circle at 30% 20%, #1b242c, #0b0f13 70%) fixed;
+    font-family: 'Crimson Pro', serif;
+    color: var(--text-main);
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.5;
+    padding: clamp(1rem, 3vw, 3rem);
+}
+
+/* Main Content Frame/Container Styling (Used on multiple pages) */
+.container, .frame {
+    width: 100%;
+    max-width: 980px;
+    background: var(--panel-accent);
+    border: 1px solid #24313b;
+    border-radius: 18px;
+    padding: clamp(1.5rem, 2.5vw, 3rem) clamp(1.25rem, 2vw, 2.25rem) 2.75rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 40px -10px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.02) inset;
+}
+/* Inner border aesthetic for frames */
+.frame:before, .frame:after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    border: 1px solid var(--gold-soft);
+    opacity: 0.12;
+    border-radius: 14px;
+}
+.frame:before { inset: 10px; }
+.frame:after { inset: 22px; }
+/* Header Styling (can be shared or adapted per page) */
+header.page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+}
+header.page-header h1 {
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    font-size: clamp(1.9rem, 4.5vw, 3rem);
+    margin: 0;
+    background: linear-gradient(120deg,var(--gold) 0%,#f3e6bb 60%,var(--gold) 100%);
+    -webkit-background-clip: text;
+    color: transparent;
+}
+header .tagline {
+    font-size: clamp(0.85rem,1.2vw,1rem);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    font-family: 'Cinzel', serif;
+}
+
+/* Introduction Text (for home page) */
+#intro {
+    line-height: 1.55;
+    font-size: clamp(1rem, 1.15vw, 1.08rem);
+    max-width: 70ch;
+    position: relative;
+    min-height: 12rem;
+    white-space: pre-wrap;
+}
+#intro .cursor {
+    display: inline-block;
+    width: .6ch;
+    background: var(--gold);
+    margin-left: 2px;
+    animation: blink 1s steps(2,start) infinite;
+    vertical-align: baseline;
+    height: 1.05em;
+    transform: translateY(2px);
+}
+@keyframes blink { 50% { background: transparent; } }
+/* Action Buttons Layout (for home page) */
+.actions {
+    margin-top: 2.7rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.1rem;
+    justify-content: center;
+}
+
+/* Footer Styling (can be shared) */
+footer {
+    margin-top: 3rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #5c6a75;
+    font-family: 'Cinzel', serif;
+    text-align: center;
+}
+footer a { color: var(--gold-soft); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* General Forms Styling */
+.form-section {
+    margin-top: 1.5rem;
+}
+.intro-text {
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--text-main);
+    margin-bottom: 2rem;
+    max-width: 70ch;
+}
+.form-group {
+    margin-bottom: 1.25rem;
+}
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+input[type="text"],
+input[type="email"],
+input[type="password"], /* For future login */
+select,
+textarea { /* For future text areas */
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid #34414c;
+    border-radius: 8px;
+    background-color: #131a1f;
+    color: var(--text-main);
+    font-family: 'Crimson Pro', serif;
+    font-size: 1rem;
+    transition: border-color .3s, box-shadow .3s;
+}
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 1px var(--gold);
+}
+select {
+    appearance: none; /* Remove default browser dropdown arrow */
+    -webkit-appearance: none; /* For Webkit browsers */
+    background-image: url('data:image/svg+xml;utf8,<svg fill="%23b89334" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>'); /* Custom SVG arrow */
+    background-repeat: no-repeat;
+    background-position: right 0.8rem center;
+    background-size: 1.5rem;
+}
+.help-text {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-top: 0.25rem;
+    display: block;
+}
+.sub-heading {
+    font-size: clamp(1.2rem, 2vw, 1.5rem);
+    color: var(--gold);
+    margin-bottom: 1.25rem;
+    text-align: center;
+}
+/* Dashboard Specific Styles (Continued from Part 4) */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    margin-top: 1.5rem;
+    margin-bottom: 2rem;
+}
+.metric-item {
+    background-color: #1f2a33;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    border: 1px solid #24313b;
+}
+.metric-item h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.9em;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+.metric-item p {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: var(--text-main);
+    margin: 0;
+}
+.event-log-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 250px; /* Scrollable log */
+    overflow-y: auto;
+    border: 1px solid #24313b;
+    border-radius: 8px;
+    background-color: #131a1f;
+}
+.event-log-section li {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #24313b;
+    font-size: 0.95rem;
+    color: var(--text-main);
+}
+.event-log-section li:last-child { border-bottom: none; }
+.policies-section { margin-bottom: 2rem; }

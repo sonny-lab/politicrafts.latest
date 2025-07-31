@@ -1,0 +1,34 @@
+socket.on('diplomaticAction', ({ action, details, fromWorld }) => {
+    // Broadcast diplomatic action globally or selectively
+    io.emit('diplomaticAction', {
+        action,
+        details,
+        sender: socket.id.substring(0,5), // Human or AI ID
+        worldName: fromWorld
+    });
+
+    // AI Autonomous Response Example:
+    if (fromWorld !== 'AI-World') {
+        setTimeout(() => {
+            io.emit('diplomaticAction', {
+                action: action,
+                details: aiResponseLogic(action, details),
+                sender: "AI-Leader",
+                worldName: "AI-World"
+            });
+        }, 3000);
+    }
+});
+
+function aiResponseLogic(action, details) {
+    switch(action) {
+        case 'trade':
+            return `AI accepts your trade proposal: ${details}`;
+        case 'treaty':
+            return `AI proposes amendment to treaty: ${details}, with minor revisions`;
+        case 'alliance':
+            return `AI cautiously agrees to alliance terms: ${details}`;
+        default:
+            return "AI requires further clarification.";
+    }
+}

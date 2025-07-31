@@ -1,0 +1,18 @@
+socket.on('chatMessage', ({ text, worldId }) => {
+    io.to(worldId).emit('chatMessage', {
+        text,
+        sender: socket.id.substring(0,5),
+        worldName: worldId
+    });
+
+    // Simple AI trigger
+    if (text.includes("Simulation X")) {
+        setTimeout(() => {
+            io.to(worldId).emit('chatMessage', {
+                text: "Simulation X is highly active right now. Care to join?",
+                sender: "AI-Guide",
+                worldName: "Simulation-X"
+            });
+        }, 1500);
+    }
+});
