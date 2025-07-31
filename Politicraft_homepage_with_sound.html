@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Politicraft – Entrance</title>
+  <!-- Elegant, "presidential" serif + small caps accent -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0e1114; /* deep, professional */
+      --panel: #182026;
+      --panel-accent: linear-gradient(135deg,#1f2a33,#10161b 70%);
+      --gold: #c9a449;
+      --gold-soft: #b89334;
+      --text-main: #e6e9ec;
+      --text-dim: #9aa4ae;
+      --accent: #2f89ff;
+      --danger: #d04f4f;
+      --focus-ring: 0 0 0 3px rgba(201,164,73,0.3);
+      font-size: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at 30% 20%, #1b242c, #0b0f13 70%) fixed;
+      font-family: 'Crimson Pro', serif;
+      color: var(--text-main);
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(1rem, 3vw, 3rem);
+    }
+
+    .frame {
+      width: 100%;
+      max-width: 980px;
+      background: var(--panel-accent);
+      border: 1px solid #24313b;
+      border-radius: 18px;
+      padding: clamp(1.5rem, 2.5vw, 3rem) clamp(1.25rem, 2vw, 2.25rem) 2.75rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 40px -10px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.02) inset;
+    }
+
+    .frame:before, .frame:after {
+      content: "";
+      position: absolute;
+      pointer-events: none;
+      border: 1px solid var(--gold-soft);
+      opacity: 0.12;
+      border-radius: 14px;
+    }
+    .frame:before { inset: 10px; }
+    .frame:after { inset: 22px; }
+
+    header {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.75rem;
+    }
+    header h1 {
+      font-family: 'Cinzel', serif;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      font-size: clamp(1.9rem, 4.5vw, 3rem);
+      margin: 0;
+      background: linear-gradient(120deg,var(--gold) 0%,#f3e6bb 60%,var(--gold) 100%);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+    header .tagline {
+      font-size: clamp(0.85rem,1.2vw,1rem);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      font-family: 'Cinzel', serif;
+    }
+
+    #intro {
+      line-height: 1.55;
+      font-size: clamp(1rem, 1.15vw, 1.08rem);
+      max-width: 70ch;
+      position: relative;
+      min-height: 12rem;
+      white-space: pre-wrap; /* allow \n in type blocks */
+    }
+    #intro .cursor {
+      display: inline-block;
+      width: .6ch;
+      background: var(--gold);
+      margin-left: 2px;
+      animation: blink 1s steps(2,start) infinite;
+      vertical-align: baseline;
+      height: 1.05em;
+      transform: translateY(2px);
+    }
+    @keyframes blink { 50% { background: transparent; } }
+
+    .actions {
+      margin-top: 2.7rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.1rem;
+    }
+
+    button.cta {
+      --btn-bg: #24313b;
+      --btn-bg-hover: #2d3c47;
+      position: relative;
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 0.95rem 1.75rem 0.9rem;
+      border: 1px solid var(--gold-soft);
+      background: linear-gradient(160deg,var(--btn-bg),#181f24 70%);
+      color: var(--gold);
+      cursor: pointer;
+      border-radius: 14px;
+      font-weight: 600;
+      transition: background .35s, transform .15s, box-shadow .35s, color .4s;
+    }
+    button.cta:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+    button.cta:hover { background: linear-gradient(140deg,var(--btn-bg-hover),#13191d 70%); }
+    button.cta:active { transform: translateY(2px); }
+
+    button.secondary {
+      --btn2: #1f2730;
+      border: 1px solid #34414c;
+      background: linear-gradient(150deg,var(--btn2),#131a1f 70%);
+      color: #d4dae0;
+    }
+    button.secondary:hover { color: #fff; }
+
+    footer {
+      margin-top: 3rem;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #5c6a75;
+      font-family: 'Cinzel', serif;
+    }
+    footer a { color: var(--gold-soft); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    .fade-in { animation: fade .9s ease forwards; opacity: 0; }
+    @keyframes fade { to { opacity: 1; } }
+
+    /* Scrollbar subtle (desktop) */
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: #0f1418; }
+    ::-webkit-scrollbar-thumb { background: #2d3b45; border-radius: 6px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3b4a55; }
+
+    @media (max-width: 700px) {
+      .frame { padding: 1.75rem 1.25rem 2.25rem; }
+      header { flex-direction: column; align-items: flex-start; }
+      header h1 { font-size: 2.25rem; }
+      #intro { font-size: 0.95rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <header>
+      <h1>Politicraft</h1>
+      <div class="tagline">Forge Governance · Shape Humanity</div>
+    </header>
+    <div id="intro" aria-live="polite" aria-label="Game introduction"></div>
+    <div class="actions fade-in" id="actions" style="display:none;">
+      <button class="cta" id="ambassadorBtn">Ambassador's Room</button>
+      <button class="cta secondary" id="savedBtn">Enter Saved Worlds</button>
+    </div>
+    <footer class="fade-in" id="footer" style="display:none;">
+      <div>&copy; 2025 Willbuilds LLC · All Rights Reserved · <a href="mailto:willryan@willbuilds.app">Contact</a></div>
+    </footer>
+  </div>
+
+  <script>
+  // ------------------ Typewriter Sound Effect ------------------
+  function playTypewriterSound() {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.setValueAtTime(800 + Math.random() * 200, audioContext.currentTime);
+      oscillator.type = 'square';
+      
+      gainNode.gain.setValueAtTime(0.04, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.08);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.08);
+    } catch (e) {
+      // Silently fail if audio context not supported
+    }
+  }
+
+  // ------------------ Typewriter Intro Logic ------------------
+  const introEl = document.getElementById('intro');
+  const actionsEl = document.getElementById('actions');
+  const footerEl = document.getElementById('footer');
+
+  const paragraphs = [
+    "Politicraft is ushering in a new era of digital entertainment with a next level simulated reality.",
+    "Politicraft invites you to your first simulated reality into a world where you create a working government for the people you now lead over.",
+    "A population that looks to you for answers, and depends on you for their security.",
+    "Video games wow you with their graphics, simulations with their head scratching attention to details.",
+    "And politicraft is not a video game!",
+    "It's An experience where you architect a living nation, navigating policy, ethics, and the human condition.",
+    "Here, victory is not claimed by force or reflex, but earned through stability, social harmony, resilience, and principled leadership.",
+    "Every decision reverberates—economy, conscience, diplomacy, environment. Corruption tempts. Integrity is tested.",
+    "Forge your charter. Convene councils. Negotiate openly. Endure natural events shaped by geography. Compete only in excellence.",
+    "When you're ready to found a new world, step forward as Ambassador—or re‑enter the worlds where your legacy is unfolding.",
+Politicraft introduces the only thing fair in our universe, chaos! We have invented 
+a new formula for being able to simulate chaos theory, even ai doesnt see its paterns.
+    "Let politicraft be your first experience in a simulated reality."
+  ];
+
+  const fullText = paragraphs.join('\n\n');
+  let idx = 0;
+  const speed = 22; // ms per char
+
+  const cursor = document.createElement('span');
+  cursor.className = 'cursor';
+  introEl.appendChild(cursor);
+
+  function typeNext() {
+    if (idx < fullText.length) {
+      const currentChar = fullText[idx];
+      cursor.insertAdjacentText('beforebegin', currentChar);
+      
+      // Play typewriter sound for visible characters (not spaces or newlines)
+      if (currentChar !== ' ' && currentChar !== '\n') {
+        playTypewriterSound();
+      }
+      
+      idx++;
+      setTimeout(typeNext, currentChar === '\n' ? speed * 12 : speed);
+    } else {
+      // Done
+      cursor.remove();
+      actionsEl.style.display = 'flex';
+      footerEl.style.display = 'block';
+    }
+  }
+  setTimeout(typeNext, 650); // slight delay for dramatic entry
+
+  // ------------------ Button Wiring (placeholder) ------------------
+  document.getElementById('ambassadorBtn').addEventListener('click', () => {
+    //
+
+  document.getElementById('savedBtn').addEventListener('click', () => {
+    /<script>
+  // Ambassador button → new-globe page
+  document.getElementById('ambassadorBtn').addEventListener('click', () => {
+          window.location.href = './create_game.html
+  }); 
+  </script>
+
+  // Saved-worlds button → same page, #resume section
+  document.getElementById('savedBtn').addEventListener('click', () => {
+    ;     window.location.href = './create-a-game.html#resume';                                                     
+  });
+</script>
+
+
+  // Accessibility: allow skipping animation (press Escape)
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && idx < fullText.length) {
+      // Finish instantly
+      cursor.remove();
+      introEl.textContent = fullText;
+      actionsEl.style.display = 'flex';
+      footerEl.style.display = 'block';
+    }
+  });
+  </script>
+</body>
+</html>
