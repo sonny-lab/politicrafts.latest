@@ -185,47 +185,23 @@
   </div>
 
   <script>
-  // ------------------ Typewriter Sound Effect ------------------
-  function playTypewriterSound() {
-    try {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.frequency.setValueAtTime(800 + Math.random() * 200, audioContext.currentTime);
-      oscillator.type = 'square';
-      
-      gainNode.gain.setValueAtTime(0.04, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.08);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.08);
-    } catch (e) {
-      // Silently fail if audio context not supported
-    }
-  }
-
   // ------------------ Typewriter Intro Logic ------------------
   const introEl = document.getElementById('intro');
   const actionsEl = document.getElementById('actions');
   const footerEl = document.getElementById('footer');
 
   const paragraphs = [
-    "Politicraft is ushering in a new era of digital entertainment with a next level simulated reality.",
-    "Politicraft wants your first simulation in a world where you create a working government for the people you now lead.",
-    "A population that looks to you for answers, and depends on you for their security.",
-    "Video games wow you with their graphics, simulations with their head scratching attention to details.",
-    "And politicraft is not a video game!",
+    "Politicraft is ushering in a new era of digital entertainment with a next level simulated reality.
+    "Politicraft wants your first simulation in a world where you create a working government for the people you now lead.
+    "A population that looks to you for answers, and depends on you for their security
+    "Video games wow you with their graphics, simulations with their head scratching attention to details.
+    "And politicraft is not a video game!
     "It's An experience where you architect a living nation, navigating policy, ethics, and the human condition.",
     "Here, victory is not claimed by force or reflex, but earned through stability, social harmony, resilience, and principled leadership.",
     "Every decision reverberates—economy, conscience, diplomacy, environment. Corruption tempts. Integrity is tested.",
     "Forge your charter. Convene councils. Negotiate openly. Endure natural events shaped by geography. Compete only in excellence.",
-    "When you're ready to found a new world, step forward as Ambassador—or re‑enter the worlds where your legacy is unfolding.",
-    "Let politicraft be your first experience in a simulated reality."
-  ];
+    "When you're ready to found a new world, step forward as Ambassador—or re‑enter the worlds where your legacy is unfolding."
+  ];"Let politicraft be your first experience in a simulated reality"
 
   const fullText = paragraphs.join('\n\n');
   let idx = 0;
@@ -237,16 +213,9 @@
 
   function typeNext() {
     if (idx < fullText.length) {
-      const currentChar = fullText[idx];
-      cursor.insertAdjacentText('beforebegin', currentChar);
-      
-      // Play typewriter sound for visible characters (not spaces or newlines)
-      if (currentChar !== ' ' && currentChar !== '\n') {
-        playTypewriterSound();
-      }
-      
+      cursor.insertAdjacentText('beforebegin', fullText[idx]);
       idx++;
-      setTimeout(typeNext, currentChar === '\n' ? speed * 12 : speed);
+      setTimeout(typeNext, fullText[idx-1] === '\n' ? speed * 12 : speed);
     } else {
       // Done
       cursor.remove();
@@ -258,15 +227,11 @@
 
   // ------------------ Button Wiring (placeholder) ------------------
   document.getElementById('ambassadorBtn').addEventListener('click', () => {
-    // Placeholder: open Create New Globe flow.
-    // In real app, POST /globes { creatorRole: 'AMBASSADOR' } then route.
-    alert('Start New Globe as Ambassador (hook this to your create-game logic).');
+    <form id="ambassador-form" action="create_game.html" method="get">
   });
 
   document.getElementById('savedBtn').addEventListener('click', () => {
-    // Placeholder: navigate to saved worlds list.
-    // e.g., window.location.href = '/worlds';
-    alert('Go to Saved Worlds (hook this to your worlds listing UI).');
+    <form id="ambassador-form" action="create_game.html" method="get">
   });
 
   // Accessibility: allow skipping animation (press Escape)
@@ -280,5 +245,6 @@
     }
   });
   </script>
+  	 html <script src="home.js" defer></script> 
 </body>
 </html>
