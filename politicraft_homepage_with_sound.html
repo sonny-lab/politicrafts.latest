@@ -258,16 +258,21 @@
 
   // ------------------ Button Wiring (placeholder) ------------------
   document.getElementById('ambassadorBtn').addEventListener('click', () => {
-    // Placeholder: open Create New Globe flow.
-    // In real app, POST /globes { creatorRole: 'AMBASSADOR' } then route.
-    alert('Start New Globe as Ambassador (hook this to your create-game logic).');
-  });
+    //
 
   document.getElementById('savedBtn').addEventListener('click', () => {
-    // Placeholder: navigate to saved worlds list.
-    // e.g., window.location.href = '/worlds';
-    alert('Go to Saved Worlds (hook this to your worlds listing UI).');
+    /<script>
+  // Ambassador button → new-globe page
+  document.getElementById('ambassadorBtn').addEventListener('click', () => {
+    window.location.href = './ambassador.html';        <!-- adjust path if needed -->
   });
+
+  // Saved-worlds button → same page, #resume section
+  document.getElementById('savedBtn').addEventListener('click', () => {
+    window.location.href = './ambassador.html#resume'; <!-- or another page once built -->
+  });
+</script>
+
 
   // Accessibility: allow skipping animation (press Escape)
   document.addEventListener('keydown', e => {
