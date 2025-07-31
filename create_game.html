@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Politicraft – Government Configuration</title>
+  <style>
+    :root {
+      --gold: #c9a449;
+      --panel: #182026;
+      --text: #e6e9ec;
+      --accent: #24313b;
+      --dark-bg: #0b0f13;
+    }
+    
+    html, body {
+      margin: 0;
+      height: 100%;
+      background: var(--dark-bg);
+      color: var(--text);
+      font-family: "Crimson Pro", serif;
+      overflow-x: hidden;
+    }
+    
+    .government-hall {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--dark-bg) 0%, var(--panel) 100%);
+    }
+    
+    .header {
+      text-align: center;
+      padding: 2rem;
+      border-bottom: 2px solid var(--gold);
+    }
+    
+    .header h1 {
+      font-family: "Cinzel", serif;
+      color: var(--gold);
+      font-size: 2.5rem;
+      margin: 0 0 1rem 0;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+    
+    .region-info {
+      background: rgba(201,164,73,0.1);
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--gold);
+      margin: 1rem 0;
+      text-align: center;
+    }
+    
+    .midterm-notice {
+      background: rgba(255, 100, 100, 0.1);
+      border: 2px solid #ff6464;
+      padding: 1rem;
+      border-radius: 8px;
+      margin: 1rem 0;
+      text-align: center;
+      font-style: italic;
+    }
+    
+    .government-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.5rem;
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    .government-card {
+      background: var(--panel);
+      border: 2px solid var(--accent);
+      border-radius: 12px;
+      padding: 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .government-card:hover {
+      border-color: var(--gold);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(201,164,73,0.3);
+    }
+    
+    .government-card.selected {
+      border-color: var(--gold);
+      background: rgba(201,164,73,0.1);
+    }
+    
+    .gov-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .gov-title {
+      font-family: "Cinzel", serif;
+      color: var(--gold);
+      font-size: 1.3rem;
+      margin: 0;
+    }
+    
+    .gov-era {
+      background: var(--accent);
+      padding: 0.3rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      color: var(--gold);
+    }
+    
+    .gov-description {
+      line-height: 1.5;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+    
+    .gov-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    
+    .detail-section {
+      background: rgba(36, 49, 59, 0.5);
+      padding: 0.8rem;
+      border-radius: 6px;
+      border-left: 3px solid var(--gold);
+    }
+    
+    .detail-title {
+      color: var(--gold);
+      font-weight: bold;
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .detail-content {
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+    
+    .prosperity-indicator {
+      display: flex;
+      align-items: center;
+      margin: 1rem 0;
+      padding: 0.5rem;
+      background: rgba(36, 49, 59, 0.3);
+      border-radius: 4px;
+    }
+    
+    .prosperity-bar {
+      flex: 1;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 4px;
+      margin: 0 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .prosperity-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff6464, #ffa500, var(--gold));
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+    
+    .setup-panel {
+      position: sticky;
+      bottom: 0;
+      background: var(--panel);
+      border-top: 2px solid var(--gold);
+      padding: 2rem;
+      text-align: center;
+    }
+    
+    .selected-government {
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .btn {
+      padding: 0.8rem 2rem;
+      border: 2px solid var(--gold);
+      background: var(--accent);
+      color: var(--gold);
+      font-family: "Cinzel", serif;
+      font-size: 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+      background: rgba(201,164,73,0.2);
+      transform: translateY(-2px);
+    }
+    
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .btn.primary {
+      background: rgba(201,164,73,0.2);
+    }
+    
+    @media (max-width: 768px) {
+      .government-grid {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+      }
+      
+      .gov-details {
+        grid-template-columns: 1fr;
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="government-hall">
+    <div class="header">
+      <h1>Government Configuration Chamber</h1>
+      <div class="region-info">
+        <strong id="selected-region">Selected Region: [Region Name]</strong>
+        <p>Configure your government structure to guide your civilization through the ages.</p>
+      </div>
+      <div class="midterm-notice">
+        ⚠️ <strong>Notice:</strong> Your chosen government cannot be implemented until midterm elections are held and approved by your citizens. Choose wisely, as this will shape your nation's political future.
+      </div>
+    </div>
+
+    <div class="government-grid" id="government-grid">
+      <!-- Government cards will be populated by JavaScript -->
+    </div>
+
+    <div class="setup-panel">
+      <div class="selected-government">
+        <strong>Selected Government:</strong> <span id="current-selection">None Selected</span>
+      </div>
+      <div class="action-buttons">
+        <button class="btn" id="back-btn">← Back to Region Selection</button>
+        <button class="btn" id="research-btn" disabled>  Research Government</button>
+        <button class="btn primary" id="proceed-btn" disabled>Configure Nation →</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Historical Government Types Database (3000+ years)
+    const governmentTypes = {
+      // Ancient Mesopotamian (3000-500 BCE)
+      theocratic_city_state: {
+        name: "Theocratic City-State",
+        era: "3000-2000 BCE",
+        region: "Mesopotamia",
+        description: "Government by priest-kings who serve as intermediaries between gods and people. The ruler combines religious and political authority, governing according to divine will.",
+        structure: "Priest-King → High Priests → Temple Officials → Citizens",
+        advantages: "Divine legitimacy, strong social cohesion, effective resource management",
+        challenges: "Religious conflicts, succession disputes, limited adaptability",
+        prosperity: 70,
+        historical: "Sumerian city-states like Ur and Uruk pioneered this system where lugals (priest-kings) ruled with divine mandate."
+      },
+      
+      akkadian_despotism: {
+        name: "Akkadian Despotism",
+        era: "2350-2150 BCE", 
+        region: "Mesopotamia",
+        description: "Absolute monarchy where the king claims divine status and rules through military conquest. Power is centralized and hereditary.",
+        structure: "Divine King → Military Commanders → Provincial Governors → Subjects",
+        advantages: "Rapid expansion, unified command, efficient administration",
+        challenges: "Succession wars, rebellions, military dependence",
+        prosperity: 75,
+        historical: "Sargon of Akkad established the first true empire, ruling as a god-king with absolute power over vast territories."
+      },
+
+      // Ancient Egyptian (3100-30 BCE)
+      pharaonic_theocracy: {
+        name: "Pharaonic Theocracy",
+        era: "3100-30 BCE",
+        region: "Egypt", 
+        description: "Divine monarchy where the Pharaoh is considered a living god, ruling through Ma'at (cosmic order). Combines absolute power with religious duty.",
+        structure: "Pharaoh (Living God) → Vizier → Nomarchs → Scribes → People",
+        advantages: "Extraordinary stability, monumental achievements, efficient bureaucracy",
+        challenges: "Rigid hierarchy, dependent on Nile floods, succession crises",
+        prosperity: 85,
+        historical: "Lasted over 3000 years, creating one of history's most enduring civilizations with remarkable cultural achievements."
+      },
+
+      // Ancient Greek (800-146 BCE)
+      athenian_democracy: {
+        name: "Athenian Democracy",
+        era: "508-322 BCE",
+        region: "Greece",
+        description: "Direct democracy where eligible citizens participate directly in decision-making. Power rests with the demos (people), not representatives.",
+        structure: "Citizen Assembly → Council of 500 → Archons → Citizens",
+        advantages: "Citizen participation, accountability, innovation in governance",
+        challenges: "Limited to citizens only, mob rule potential, slow decisions",
+        prosperity: 80,
+        historical: "Athens developed the world's first democracy, though only adult male citizens could participate (about 10% of population)."
+      },
+
+      spartan_mixed_government: {
+        name: "Spartan Mixed Government", 
+        era: "800-146 BCE",
+        region: "Greece",
+        description: "Unique system combining monarchy (two kings), aristocracy (Gerousia), and democracy (Apella). Designed for military excellence.",
+        structure: "Dual Kings → Gerousia (Elders) → Ephors → Apella (Assembly) → Helots",
+        advantages: "Military supremacy, stable leadership, balanced power",
+        challenges: "Rigid social system, limited economic growth, fear of helot revolts",
+        prosperity: 65,
+        historical: "Sparta's constitution balanced different forms of government while maintaining a warrior society for centuries."
+      },
+
+      greek_tyranny: {
+        name: "Greek Tyranny",
+        era: "650-500 BCE", 
+        region: "Greece",
+        description: "Rule by a single strong leader who seized power unconstitutionally but often governed beneficially. Neither hereditary nor necessarily oppressive.",
+        structure: "Tyrant → Personal Advisors → City Officials → Citizens",
+        advantages: "Strong leadership, public works, protection of common people",
+        challenges: "Succession problems, potential for abuse, political instability",
+        prosperity: 70,
+        historical: "Tyrants like Peisistratos of Athens often improved cities and protected ordinary citizens against aristocratic abuse."
+      },
+
+      // Roman (753 BCE - 476 CE)
+      roman_republic: {
+        name: "Roman Republic",
+        era: "509-27 BCE",
+        region: "Rome",
+        description: "Mixed government with consuls, senate, and popular assemblies. Power shared between different classes and institutions with complex checks and balances.",
+        structure: "Consuls → Senate → Praetors → Tribunes → Popular Assemblies",
+        advantages: "Balanced power, expansion capability, legal innovation, representation",
+        challenges: "Class conflicts, political deadlock, military strongmen",
+        prosperity: 85,
+        historical: "Created sophisticated legal and political systems that influenced Western civilization for millennia."
+      },
+
+      roman_empire: {
+        name: "Roman Empire",
+        era: "27 BCE - 476 CE",
+        region: "Rome",
+        description: "Imperial system where emperors hold supreme power while maintaining republican institutions. Combines autocracy with efficient administration.",
+        structure: "Emperor → Praetorian Guard → Senators → Governors → Citizens",
+        advantages: "Military efficiency, vast territory control, legal uniformity, infrastructure",
+        challenges: "Succession crises, military costs, barbarian invasions, administrative overstretch",
+        prosperity: 90,
+        historical: "Governed the largest empire in ancient history, bringing unprecedented peace and prosperity to the Mediterranean world."
+      },
+
+      // Chinese (1046 BCE - 1912 CE)
+      mandate_of_heaven: {
+        name: "Mandate of Heaven",
+        era: "1046 BCE - 1912 CE",
+        region: "China",
+        description: "Imperial system where the emperor rules with divine approval but can lose the mandate through poor governance. Emphasizes moral rule and performance legitimacy.",
+        structure: "Son of Heaven → Mandarins → Prefecture Governors → County Magistrates → People",
+        advantages: "Moral accountability, meritocratic bureaucracy, cultural continuity, adaptability",
+        challenges: "Dynastic cycles, bureaucratic corruption, rebellion legitimacy",
+        prosperity: 80,
+        historical: "Zhou Dynasty created this concept that justified both imperial rule and revolution, lasting over 2000 years."
+      },
+
+      legalist_state: {
+        name: "Legalist State",
+        era: "221-206 BCE",
+        region: "China", 
+        description: "Authoritarian system based on strict laws, harsh punishments, and state control of all aspects of life. Emphasizes order through fear.",
+        structure: "Emperor → Legal Ministers → District Officials → Mutual Surveillance Groups",
+        advantages: "Rapid unification, strong military, efficient control, economic growth",
+        challenges: "Popular resentment, harsh punishments, lack of flexibility, short-lived",
+        prosperity: 70,
+        historical: "Qin Dynasty used Legalism to unify China but harsh rule led to rapid collapse after first emperor's death."
+      },
+
+      confucian_bureaucracy: {
+        name: "Confucian Bureaucracy",
+        era: "206 BCE - 1912 CE",
+        region: "China",
+        description: "Imperial government guided by Confucian principles emphasizing moral leadership, education, and meritocratic civil service examinations.",
+        structure: "Emperor → Confucian Ministers → Scholar-Officials → Local Magistrates → People",
+        advantages: "Educated leadership, moral governance, social stability, long-term planning",
+        challenges: "Conservative tendencies, examination corruption, elite isolation",
+        prosperity: 85,
+        historical: "Han Dynasty established this system that dominated Chinese governance for over 2000 years."
+      },
+
+      // Medieval European (500-1500 CE)
+      feudal_monarchy: {
+        name: "Feudal Monarchy",
+        era: "800-1500 CE",
+        region: "Europe",
+        description: "Decentralized system where land is granted in exchange for military service. Power shared between monarch and noble vassals.",
+        structure: "King → Dukes/Counts → Knights → Peasants/Serfs",
+        advantages: "Military organization, local administration, personal loyalty bonds",
+        challenges: "Divided loyalty, weak central authority, constant warfare",
+        prosperity: 60,
+        historical: "Dominated medieval Europe, providing stability after Roman collapse but limiting central authority."
+      },
+
+      divine_right_monarchy: {
+        name: "Divine Right Monarchy",
+        era: "1500-1800 CE",
+        region: "Europe",
+        description: "Absolute monarchy where kings rule by God's direct appointment. Royal authority is unlimited and sacred, not subject to earthly challenge.",
+        structure: "Divine King → Royal Council → Noble Court → Regional Governors → Subjects",
+        advantages: "Clear authority, efficient decision-making, national unity, grand projects",
+        challenges: "No accountability, potential tyranny, succession disputes, popular resentment",
+        prosperity: 75,
+        historical: "Exemplified by Louis XIV of France, this system dominated Europe until democratic revolutions."
+      },
+
+      // Islamic (622 CE - Present)
+      caliphate: {
+        name: "Caliphate",
+        era: "632-1924 CE",
+        region: "Islamic World",
+        description: "Islamic theocracy led by the Caliph as successor to Prophet Muhammad. Combines religious and political authority under Islamic law (Sharia).",
+        structure: "Caliph → Viziers → Governors → Qadis (Judges) → Ummah (Community)",
+        advantages: "Religious unity, legal consistency, trade networks, cultural patronage",
+        challenges: "Succession disputes, sectarian conflicts, territorial divisions",
+        prosperity: 80,
+        historical: "United the Islamic world for centuries, creating vast empires from Spain to Central Asia."
+      },
+
+      // Renaissance/Early Modern (1400-1800 CE)
+      merchant_republic: {
+        name: "Merchant Republic",
+        era: "1400-1800 CE",
+        region: "Italy/Northern Europe",
+        description: "Oligarchic republic controlled by wealthy merchant families. Government serves commercial interests and trade expansion.",
+        structure: "Merchant Council → Trade Guilds → City Officials → Artisans → Workers",
+        advantages: "Economic prosperity, trade networks, cultural patronage, innovation",
+        challenges: "Wealth inequality, limited representation, commercial conflicts",
+        prosperity: 85,
+        historical: "Venice and Dutch Republic exemplified this system, achieving remarkable prosperity through trade."
+      },
+
+      // Modern Democratic Experiments
+      constitutional_monarchy: {
+        name: "Constitutional Monarchy",
+        era: "1688-Present",
+        region: "Britain/Europe",
+        description: "Limited monarchy where royal power is constrained by constitution and parliament. Monarch serves as symbolic head while elected officials govern.",
+        structure: "Constitutional Monarch → Prime Minister → Parliament → Civil Service → Citizens",
+        advantages: "Democratic accountability, stability, gradual reform, symbolic unity",
+        challenges: "Complex balance of power, expensive monarchy, unclear authority",
+        prosperity: 90,
+        historical: "British system became model for many modern democracies, balancing tradition with democratic governance."
+      },
+
+      federal_republic: {
+        name: "Federal Republic",
+        era: "1787-Present",
+        region: "Americas",
+        description: "Democratic system with power divided between federal and state governments. Emphasizes separation of powers and individual rights.",
+        structure: "President → Congress → Supreme Court → State Governments → Citizens",
+        advantages: "Checks and balances, individual rights, federal flexibility, democratic participation",
+        challenges: "Gridlock potential, complex governance, federal-state tensions",
+        prosperity: 90,
+        historical: "United States pioneered this system, influencing democratic movements worldwide."
+      }
+    };
+
+    // Current game state
+    let selectedRegion = null;
+    let selectedGovernment = null;
+
+    // Initialize the interface
+    function initializeInterface() {
+      // Get region from URL params or localStorage
+      selectedRegion = getSelectedRegion();
+      document.getElementById('selected-region').textContent = `Selected Region: ${selectedRegion || 'Unknown Region'}`;
+      
+      populateGovernmentGrid();
+      setupEventListeners();
+    }
+
+    function getSelectedRegion() {
+      // This would typically come from the telescope selection
+      // For now, return a placeholder
+      return 'Coastal Trade Federation'; // This should be dynamic
+    }
+
+    function populateGovernmentGrid() {
+      const grid = document.getElementById('government-grid');
+      grid.innerHTML = '';
+
+      Object.entries(governmentTypes).forEach(([key, gov]) => {
+        const card = createGovernmentCard(key, gov);
+        grid.appendChild(card);
+      });
+    }
+
+    function createGovernmentCard(key, gov) {
+      const card = document.createElement('div');
+      card.className = 'government-card';
+      card.dataset.govKey = key;
+
+      card.innerHTML = `
+        <div class="gov-header">
+          <h3 class="gov-title">${gov.name}</h3>
+          <span class="gov-era">${gov.era}</span>
+        </div>
+        <p class="gov-description">${gov.description}</p>
+        <div class="gov-details">
+          <div class="detail-section">
+            <div class="detail-title">Structure</div>
+            <div class="detail-content">${gov.structure}</div>
+          </div>
+          <div class="detail-section">
+            <div class="detail-title">Historical Context</div>
+            <div class="detail-content">${gov.historical}</div>
+          </div>
+          <div class="detail-section">
+            <div class="detail-title">Advantages</div>
+            <div class="detail-content">${gov.advantages}</div>
+          </div>
+          <div class="detail-section">
+            <div class="detail-title">Challenges</div>
+            <div class="detail-content">${gov.challenges}</div>
+          </div>
+        </div>
+        <div class="prosperity-indicator">
+          <span>Historical Prosperity:</span>
+          <div class="prosperity-bar">
+            <div class="prosperity-fill" style="width: ${gov.prosperity}%"></div>
+          </div>
+          <span>${gov.prosperity}%</span>
+        </div>
+      `;
+
+      card.addEventListener('click', () => selectGovernment(key, gov));
+      return card;
+    }
+
+    function selectGovernment(key, gov) {
+      // Remove previous selection
+      document.querySelectorAll('.government-card').forEach(card => {
+        card.classList.remove('selected');
+      });
+
+      // Add selection to clicked card
+      document.querySelector(`[data-gov-key="${key}"]`).classList.add('selected');
+
+      selectedGovernment = { key, ...gov };
+      document.getElementById('current-selection').textContent = gov.name;
+
+      // Enable buttons
+      document.getElementById('research-btn').disabled = false;
+      document.getElementById('proceed-btn').disabled = false;
+    }
+
+    function setupEventListeners() {
+      document.getElementById('back-btn').addEventListener('click', () => {
+        // Navigate back to telescope/region selection
+        window.parent.postMessage({ type: 'NAVIGATE', target: 'telescope' }, '*');
+      });
+
+      document.getElementById('research-btn').addEventListener('click', () => {
+        if (selectedGovernment) {
+          showGovernmentResearch(selectedGovernment);
+        }
+      });
+
+      document.getElementById('proceed-btn').addEventListener('click', () => {
+        if (selectedGovernment) {
+          proceedToNationConfiguration();
+        }
+      });
+    }
+
+    function showGovernmentResearch(gov) {
+      // Create a detailed research modal/overlay
+      alert(`Research: ${gov.name}\\n\\nEra: ${gov.era}\\nRegion: ${gov.region}\\n\\n${gov.historical}\\n\\nThis system offers: ${gov.advantages}\\n\\nBut faces challenges: ${gov.challenges}`);
+    }
+
+    function proceedToNationConfiguration() {
+      // Save selection and move to next phase
+      const configData = {
+        region: selectedRegion,
+        government: selectedGovernment,
+        timestamp: Date.now()
+      };
+
+      // Send data to parent/main game system
+      window.parent.postMessage({ 
+        type: 'GOVERNMENT_SELECTED', 
+        data: configData 
+      }, '*');
+
+      // Navigate to next phase
+      window.parent.postMessage({ 
+        type: 'NAVIGATE', 
+        target: 'nation-configuration' 
+      }, '*');
+    }
+
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', initializeInterface);
+  </script>
+</body>
+</html>
